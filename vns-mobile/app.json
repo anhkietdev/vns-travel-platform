@@ -9,14 +9,23 @@
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "Ứng dụng cần truy cập vị trí của bạn để cung cấp các dịch vụ phù hợp với khu vực bạn đang ở.",
+        "NSLocationAlwaysAndWhenInUseUsageDescription": "Ứng dụng cần truy cập vị trí của bạn để cung cấp các dịch vụ phù hợp ngay cả khi bạn không sử dụng ứng dụng."
+      }
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "edgeToEdgeEnabled": true
+      "edgeToEdgeEnabled": true,
+      "permissions": [
+        "ACCESS_COARSE_LOCATION",
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_BACKGROUND_LOCATION"
+      ]
     },
     "web": {
       "bundler": "metro",
@@ -32,6 +41,14 @@
           "imageWidth": 200,
           "resizeMode": "contain",
           "backgroundColor": "#ffffff"
+        }
+      ],
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "Ứng dụng cần truy cập vị trí của bạn để cung cấp các dịch vụ phù hợp.",
+          "locationAlwaysPermission": "Ứng dụng cần truy cập vị trí của bạn ngay cả khi bạn không sử dụng ứng dụng.",
+          "locationWhenInUsePermission": "Ứng dụng cần truy cập vị trí của bạn để cung cấp các dịch vụ phù hợp với khu vực bạn đang ở."
         }
       ]
     ],

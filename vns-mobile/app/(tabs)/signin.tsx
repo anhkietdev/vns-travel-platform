@@ -101,7 +101,7 @@ export default function SignInScreen() {
         Chưa có tài khoản?{" "}
         <Text
           style={{ fontWeight: "bold" }}
-          onPress={() => router.push("/register")}
+          onPress={() => router.push("/login")}
         >
           Đăng ký
         </Text>
