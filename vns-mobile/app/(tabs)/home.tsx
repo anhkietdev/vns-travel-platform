@@ -1,7 +1,6 @@
 // app/(tabs)/home.tsx
 import { FontAwesome, Ionicons, MaterialIcons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
-import * as Location from "expo-location";
 import { router } from "expo-router";
 import { useRef, useState } from "react";
 import {
@@ -231,16 +230,6 @@ const notifications: Notification[] = [
   },
 ];
 
-const categories = [
-  "Tất cả",
-  "Biển",
-  "Núi",
-  "Hồ",
-  "Tour",
-  "Di tích",
-  "Ẩm thực",
-];
-
 const availableLocations = [
   "Hà Nội, Việt Nam",
   "Hồ Chí Minh, Việt Nam",
@@ -250,11 +239,10 @@ const availableLocations = [
   "Phú Quốc, Việt Nam",
 ];
 
-// ==================== MAIN COMPONENT ====================
 export default function HomeScreen() {
   // State management
   const [currentLocation, setCurrentLocation] = useState("Hà Nội, Việt Nam");
-  const [activeCategory, setActiveCategory] = useState("Tất cả");
+  const [activeCategory, setActiveCategory] = useState("Tour");
   const [showNotifications, setShowNotifications] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
   const [showLocationModal, setShowLocationModal] = useState(false);
@@ -277,63 +265,7 @@ export default function HomeScreen() {
     router.replace("/signin");
   };
 
-  // Menu items
-  const menuItems: MenuItem[] = [
-    {
-      id: 1,
-      title: "Thông tin cá nhân",
-      icon: "person",
-      onPress: () => {
-        setShowMenu(false);
-        router.push("/(tabs)/profile");
-      },
-    },
-    {
-      id: 2,
-      title: "Đơn hàng của tôi",
-      icon: "receipt",
-      onPress: () => {
-        setShowMenu(false);
-        router.push("/(tabs)/orders");
-      },
-    },
-    {
-      id: 3,
-      title: "Giỏ hàng",
-      icon: "shopping-cart",
-      onPress: () => {
-        setShowMenu(false);
-        router.push("/(tabs)/cart");
-      },
-    },
-    {
-      id: 4,
-      title: "Hỗ trợ khách hàng",
-      icon: "support-agent",
-      onPress: () => {
-        setShowMenu(false);
-        router.push("/(tabs)/support");
-      },
-    },
-    {
-      id: 5,
-      title: "Đăng xuất",
-      icon: "logout",
-      onPress: handleLogout,
-    },
-  ];
-
-  // Toggle notifications
-  const toggleNotifications = () => {
-    setShowNotifications((prev) => !prev);
-    Animated.timing(fadeAnim, {
-      toValue: showNotifications ? 0 : 1,
-      duration: 200,
-      useNativeDriver: true,
-    }).start();
-  };
-
-  // Toggle menu
+  // Toggle menu function
   const toggleMenu = () => {
     const targetHeight = showMenu ? 0 : menuItems.length * 50 + 20;
     setShowMenu((prev) => !prev);
@@ -344,26 +276,14 @@ export default function HomeScreen() {
     }).start();
   };
 
-  // Get current location
-  const getCurrentLocation = async () => {
-    let { status } = await Location.requestForegroundPermissionsAsync();
-    if (status !== "granted") {
-      Alert.alert("Quyền truy cập vị trí bị từ chối");
-      return;
-    }
-
-    let location = await Location.getCurrentPositionAsync({});
-    const address = await Location.reverseGeocodeAsync({
-      latitude: location.coords.latitude,
-      longitude: location.coords.longitude,
-    });
-
-    if (address[0]) {
-      const city = address[0].city || address[0].region;
-      const country = address[0].country;
-      setCurrentLocation(`${city}, ${country}`);
-      setShowLocationModal(false);
-    }
+  // Toggle notifications function
+  const toggleNotifications = () => {
+    setShowNotifications((prev) => !prev);
+    Animated.timing(fadeAnim, {
+      toValue: showNotifications ? 0 : 1,
+      duration: 200,
+      useNativeDriver: true,
+    }).start();
   };
 
   // Handle location selection
@@ -425,6 +345,60 @@ export default function HomeScreen() {
       setQuantity((prev) => prev - 1);
     }
   };
+
+  // Menu items
+  const menuItems: MenuItem[] = [
+    {
+      id: 1,
+      title: "Thông tin cá nhân",
+      icon: "person",
+      onPress: () => {
+        setShowMenu(false);
+        router.push("/(tabs)/profile");
+      },
+    },
+    {
+      id: 2,
+      title: "Giỏ hàng",
+      icon: "shopping-cart",
+      onPress: () => {
+        setShowMenu(false);
+        router.push("/(tabs)/cart");
+      },
+    },
+    {
+      id: 3,
+      title: "Hỗ trợ khách hàng",
+      icon: "support-agent",
+      onPress: () => {
+        setShowMenu(false);
+        router.push("/(tabs)/support");
+      },
+    },
+    {
+      id: 4,
+      title: "Đăng xuất",
+      icon: "logout",
+      onPress: handleLogout,
+    },
+  ];
+
+  // Render menu item
+  const renderMenuItem = ({ item }: { item: MenuItem }) => (
+    <TouchableOpacity
+      key={item.id}
+      style={styles.menuItem}
+      onPress={item.onPress}
+    >
+      <MaterialIcons
+        name={item.icon}
+        size={24}
+        color="#4A90E2"
+        style={styles.menuIcon}
+      />
+      <Text style={styles.menuText}>{item.title}</Text>
+    </TouchableOpacity>
+  );
 
   // Render destination item
   const renderDestinationItem = ({ item }: { item: Destination }) => (
@@ -500,23 +474,6 @@ export default function HomeScreen() {
       <Text style={styles.notificationItemMessage}>{item.message}</Text>
       <Text style={styles.notificationItemTime}>{item.time}</Text>
     </View>
-  );
-
-  // Render menu item
-  const renderMenuItem = ({ item }: { item: MenuItem }) => (
-    <TouchableOpacity
-      key={item.id}
-      style={styles.menuItem}
-      onPress={item.onPress}
-    >
-      <MaterialIcons
-        name={item.icon}
-        size={24}
-        color="#4A90E2"
-        style={styles.menuIcon}
-      />
-      <Text style={styles.menuText}>{item.title}</Text>
-    </TouchableOpacity>
   );
 
   // Render detail modal
@@ -888,55 +845,88 @@ export default function HomeScreen() {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        {/* Search Bar */}
-        <TouchableOpacity
-          style={styles.searchContainer}
-          onPress={() => router.push("/(tabs)/search")}
-        >
-          <MaterialIcons
-            name="search"
-            size={24}
-            color="#666"
-            style={styles.searchIcon}
-          />
-          <Text style={styles.searchInput}>Tìm kiếm điểm du lịch...</Text>
-        </TouchableOpacity>
-
-        {/* Categories */}
+        {/* Dịch vụ Du Lịch - Phiên bản đẹp hơn */}
         <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Dịch Vụ</Text>
+          <Text style={styles.sectionTitle}>Dịch Vụ Du Lịch</Text>
         </View>
 
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          style={styles.categoriesContainer}
-          contentContainerStyle={styles.categoriesContent}
-        >
-          {categories.map((category) => (
-            <TouchableOpacity
-              key={category}
+        <View style={styles.servicesContainer}>
+          <TouchableOpacity
+            style={[
+              styles.serviceButton,
+              activeCategory === "Tour" && styles.activeServiceButton,
+            ]}
+            onPress={() => setActiveCategory("Tour")}
+          >
+            <View style={styles.serviceIconContainer}>
+              <MaterialIcons
+                name="airplanemode-active"
+                size={24}
+                color={activeCategory === "Tour" ? "#FFF" : "#4A90E2"}
+              />
+            </View>
+            <Text
               style={[
-                styles.categoryItem,
-                activeCategory === category && styles.activeCategoryItem,
+                styles.serviceText,
+                activeCategory === "Tour" && styles.activeServiceText,
               ]}
-              onPress={() => setActiveCategory(category)}
             >
-              <Text
-                style={[
-                  styles.categoryText,
-                  activeCategory === category && styles.activeCategoryText,
-                ]}
-              >
-                {category}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </ScrollView>
+              Tour
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[
+              styles.serviceButton,
+              activeCategory === "HomeStay" && styles.activeServiceButton,
+            ]}
+            onPress={() => setActiveCategory("HomeStay")}
+          >
+            <View style={styles.serviceIconContainer}>
+              <MaterialIcons
+                name="house"
+                size={24}
+                color={activeCategory === "HomeStay" ? "#FFF" : "#4A90E2"}
+              />
+            </View>
+            <Text
+              style={[
+                styles.serviceText,
+                activeCategory === "HomeStay" && styles.activeServiceText,
+              ]}
+            >
+              HomeStay
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[
+              styles.serviceButton,
+              activeCategory === "Thuê Xe" && styles.activeServiceButton,
+            ]}
+            onPress={() => setActiveCategory("Thuê Xe")}
+          >
+            <View style={styles.serviceIconContainer}>
+              <MaterialIcons
+                name="directions-car"
+                size={24}
+                color={activeCategory === "Thuê Xe" ? "#FFF" : "#4A90E2"}
+              />
+            </View>
+            <Text
+              style={[
+                styles.serviceText,
+                activeCategory === "Thuê Xe" && styles.activeServiceText,
+              ]}
+            >
+              Thuê Xe
+            </Text>
+          </TouchableOpacity>
+        </View>
 
         {/* Popular Trips */}
         <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Địa điểm nổi bật</Text>
+          <Text style={styles.sectionTitle}>Địa Điểm Nổi Bật</Text>
           <TouchableOpacity>
             <Text style={styles.seeAll}>Xem tất cả</Text>
           </TouchableOpacity>
@@ -953,7 +943,7 @@ export default function HomeScreen() {
 
         {/* Group Trips */}
         <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Tour Du Lịch</Text>
+          <Text style={styles.sectionTitle}>Tour Du Lịch Nhóm</Text>
           <TouchableOpacity>
             <Text style={styles.seeAll}>Xem tất cả</Text>
           </TouchableOpacity>
@@ -1032,7 +1022,7 @@ export default function HomeScreen() {
 
             <TouchableOpacity
               style={styles.locationItem}
-              onPress={getCurrentLocation}
+              onPress={() => handleSelectLocation("Vị trí hiện tại")}
             >
               <MaterialIcons name="my-location" size={20} color="#4A90E2" />
               <Text style={styles.locationItemText}>Vị trí hiện tại</Text>
@@ -1148,29 +1138,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: "#333",
   },
-  searchContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#FFF",
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    marginHorizontal: 24,
-    marginTop: 20,
-    height: 50,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  searchIcon: {
-    marginRight: 8,
-  },
-  searchInput: {
-    flex: 1,
-    fontSize: 16,
-    color: "#333",
-  },
   sectionHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -1189,44 +1156,48 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "500",
   },
-  categoriesContainer: {
-    paddingLeft: 24,
+  // Styles mới cho phần Dịch vụ Du Lịch
+  servicesContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    paddingHorizontal: 24,
+    marginBottom: 20,
   },
-  categoriesContent: {
-    paddingRight: 24,
-  },
-  categoryItem: {
+  serviceButton: {
+    alignItems: "center",
+    width: "30%",
+    paddingVertical: 12,
+    borderRadius: 12,
     backgroundColor: "#FFF",
-    borderRadius: 20,
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    marginRight: 10,
     borderWidth: 1,
     borderColor: "#E0E0E0",
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 1,
-  },
-  activeCategoryItem: {
-    backgroundColor: "#4A90E2",
-    borderColor: "#4A90E2",
-    shadowColor: "#4A90E2",
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
+    shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 2,
   },
-  categoryText: {
-    color: "#666",
-    fontSize: 15,
-    fontWeight: "600",
+  activeServiceButton: {
+    backgroundColor: "#4A90E2",
+    borderColor: "#4A90E2",
+    shadowColor: "#4A90E2",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 6,
+    elevation: 3,
   },
-  activeCategoryText: {
+  serviceIconContainer: {
+    marginBottom: 8,
+  },
+  serviceText: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#4A90E2",
+  },
+  activeServiceText: {
     color: "#FFF",
-    fontWeight: "600",
   },
+  // Các styles còn lại giữ nguyên
   horizontalListContent: {
     paddingLeft: 24,
     paddingRight: 8,
@@ -1238,6 +1209,11 @@ const styles = StyleSheet.create({
     overflow: "hidden",
     marginRight: 16,
     position: "relative",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 6,
+    elevation: 3,
   },
   tripImage: {
     width: "100%",
@@ -1319,10 +1295,10 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     height: 120,
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
+    shadowRadius: 6,
+    elevation: 3,
   },
   groupTripImage: {
     width: 120,

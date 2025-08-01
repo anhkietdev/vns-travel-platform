@@ -1,130 +1,70 @@
 // app/payment.tsx
-import { MaterialIcons } from "@expo/vector-icons";
-import { router, useLocalSearchParams } from "expo-router";
-import { useEffect, useState } from "react";
+import { FontAwesome, MaterialIcons } from "@expo/vector-icons";
+import { router } from "expo-router";
+import { useState } from "react";
 import {
-  Alert,
+  ActivityIndicator,
   Image,
+  Modal,
   ScrollView,
   StyleSheet,
   Text,
-  TextInput,
   TouchableOpacity,
   View,
 } from "react-native";
 
-type PaymentItem = {
-  id: number;
-  name: string;
-  price: number;
-  quantity: number;
-  total: number;
-};
-
 export default function PaymentScreen() {
-  const params = useLocalSearchParams();
-  const [items, setItems] = useState<PaymentItem[]>([]);
-  const [totalAmount, setTotalAmount] = useState(0);
-  const [email, setEmail] = useState("");
-  const [phone, setPhone] = useState("");
+  // State quản lý UI
   const [isProcessing, setIsProcessing] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
 
-  // Load dữ liệu từ trang giỏ hàng
-  useEffect(() => {
-    if (params.items && params.total) {
-      try {
-        const parsedItems = JSON.parse(params.items as string);
-        const paymentItems = parsedItems.map((item: any) => ({
-          id: item.id,
-          name: item.name,
-          price: item.price,
-          quantity: item.quantity,
-          total: item.price * item.quantity,
-        }));
-        setItems(paymentItems);
-        setTotalAmount(Number(params.total));
-      } catch (error) {
-        console.error("Error parsing items:", error);
-        Alert.alert("Lỗi", "Không thể tải thông tin đơn hàng");
-        router.back();
-      }
-    } else {
-      Alert.alert("Lỗi", "Không có thông tin đơn hàng");
-      router.back();
-    }
-  }, []); // Empty dependency array to run only once
+  // Dữ liệu mẫu cố định cho UI
+  const paymentInfo = {
+    paymentMethod: "full" as const,
+    paymentAmount: 12200000,
+    totalPrice: 12200000,
+    items: [
+      {
+        id: 1,
+        name: "Tour Vịnh Hạ Long",
+        location: "Quảng Ninh",
+        price: 4500000,
+        quantity: 2,
+        image: require("@/assets/images/halong.jpg"),
+      },
+      {
+        id: 2,
+        name: "Tour Phong Nha - Kẻ Bàng",
+        location: "Quảng Bình",
+        price: 3200000,
+        quantity: 1,
+        image: require("@/assets/images/phongnha.jpg"),
+      },
+    ],
+    customerInfo: {
+      fullName: "Nguyễn Văn A",
+      email: "nguyenvana@gmail.com",
+      phone: "0987654321",
+      address: "123 Đường ABC, Quận 1, TP.HCM",
+      note: "Yêu cầu phòng đơn",
+    },
+  };
 
-  // Xử lý thanh toán bằng ZaloPay
-  const handleZaloPayPayment = async () => {
-    if (!email || !phone) {
-      Alert.alert("Lỗi", "Vui lòng nhập đầy đủ email và số điện thoại");
-      return;
-    }
-
-    if (!validateEmail(email)) {
-      Alert.alert("Lỗi", "Email không hợp lệ");
-      return;
-    }
-
-    if (!validatePhone(phone)) {
-      Alert.alert("Lỗi", "Số điện thoại không hợp lệ");
-      return;
-    }
-
+  // Xử lý thanh toán
+  const handlePayment = () => {
     setIsProcessing(true);
 
-    try {
-      // Giả lập quá trình thanh toán ZaloPay
-      await new Promise((resolve) => setTimeout(resolve, 2000));
-
-      // Giả lập gửi email xác nhận
-      await sendConfirmationEmail(email, items, totalAmount);
-
-      Alert.alert(
-        "Thanh toán thành công",
-        "Bạn đã thanh toán thành công bằng ZaloPay. Thông tin xác nhận đã được gửi đến email của bạn.",
-        [
-          {
-            text: "OK",
-            onPress: () => {
-              router.replace({
-                pathname: "/(tabs)/home",
-                params: { paymentSuccess: "true" },
-              });
-            },
-          },
-        ]
-      );
-    } catch (error) {
-      Alert.alert("Lỗi", "Thanh toán thất bại. Vui lòng thử lại sau.");
-      console.error("Payment error:", error);
-    } finally {
+    // Giả lập quá trình thanh toán (2 giây)
+    setTimeout(() => {
       setIsProcessing(false);
-    }
-  };
+      setShowSuccessModal(true);
 
-  // Hàm giả lập gửi email xác nhận
-  const sendConfirmationEmail = async (
-    email: string,
-    items: PaymentItem[],
-    total: number
-  ) => {
-    console.log(`Gửi email xác nhận đến: ${email}`);
-    console.log("Chi tiết đơn hàng:", items);
-    console.log("Tổng tiền:", total);
-    return new Promise((resolve) => setTimeout(resolve, 1000));
-  };
-
-  // Validate email
-  const validateEmail = (email: string) => {
-    const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return re.test(email);
-  };
-
-  // Validate phone number (10-11 số)
-  const validatePhone = (phone: string) => {
-    const re = /^[0-9]{10,11}$/;
-    return re.test(phone);
+      // Tự động đóng modal sau 3 giây và về trang home
+      setTimeout(() => {
+        setShowSuccessModal(false);
+        router.replace("/(tabs)/home");
+      }, 3000);
+    }, 2000);
   };
 
   return (
@@ -138,103 +78,166 @@ export default function PaymentScreen() {
         <View style={{ width: 24 }} />
       </View>
 
-      {/* Nội dung thanh toán */}
-      <ScrollView style={styles.content}>
-        {/* Thông tin đơn hàng */}
+      {/* Nội dung chính */}
+      <ScrollView
+        style={styles.content}
+        contentContainerStyle={{ paddingBottom: 120 }}
+      >
+        {/* Thông tin khách hàng */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Thông tin đơn hàng</Text>
-          {items.map((item) => (
-            <View key={item.id} style={styles.orderItem}>
-              <Text style={styles.itemName}>{item.name}</Text>
-              <Text style={styles.itemPrice}>
-                {item.price.toLocaleString()} VND × {item.quantity} ={" "}
-                {item.total.toLocaleString()} VND
-              </Text>
-            </View>
-          ))}
-          <View style={styles.totalContainer}>
-            <Text style={styles.totalLabel}>Tổng cộng:</Text>
-            <Text style={styles.totalAmount}>
-              {totalAmount.toLocaleString()} VND
+          <View style={styles.sectionHeader}>
+            <MaterialIcons name="person-outline" size={20} color="#4A90E2" />
+            <Text style={styles.sectionTitle}>Thông tin khách hàng</Text>
+          </View>
+
+          <View style={styles.infoRow}>
+            <Text style={styles.infoLabel}>Họ và tên:</Text>
+            <Text style={styles.infoValue}>
+              {paymentInfo.customerInfo.fullName}
+            </Text>
+          </View>
+
+          <View style={styles.infoRow}>
+            <Text style={styles.infoLabel}>Email:</Text>
+            <Text style={styles.infoValue}>
+              {paymentInfo.customerInfo.email}
+            </Text>
+          </View>
+
+          <View style={styles.infoRow}>
+            <Text style={styles.infoLabel}>Số điện thoại:</Text>
+            <Text style={styles.infoValue}>
+              {paymentInfo.customerInfo.phone}
+            </Text>
+          </View>
+
+          <View style={styles.infoRow}>
+            <Text style={styles.infoLabel}>Địa chỉ:</Text>
+            <Text style={styles.infoValue}>
+              {paymentInfo.customerInfo.address}
+            </Text>
+          </View>
+
+          <View style={styles.infoRow}>
+            <Text style={styles.infoLabel}>Ghi chú:</Text>
+            <Text style={styles.infoValue}>
+              {paymentInfo.customerInfo.note}
             </Text>
           </View>
         </View>
 
-        {/* Thông tin khách hàng */}
+        {/* Thông tin đơn hàng */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Thông tin khách hàng</Text>
-
-          <View style={styles.inputGroup}>
-            <Text style={styles.inputLabel}>Email xác nhận</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="Nhập email của bạn"
-              keyboardType="email-address"
-              autoCapitalize="none"
-              value={email}
-              onChangeText={setEmail}
-            />
+          <View style={styles.sectionHeader}>
+            <MaterialIcons name="shopping-cart" size={20} color="#4A90E2" />
+            <Text style={styles.sectionTitle}>Thông tin đơn hàng</Text>
           </View>
 
-          <View style={styles.inputGroup}>
-            <Text style={styles.inputLabel}>Số điện thoại</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="Nhập số điện thoại"
-              keyboardType="phone-pad"
-              value={phone}
-              onChangeText={setPhone}
-              maxLength={11}
-            />
+          {paymentInfo.items.map((item) => (
+            <View key={item.id} style={styles.orderItem}>
+              <Image source={item.image} style={styles.itemImage} />
+              <View style={styles.itemDetails}>
+                <Text style={styles.itemName}>{item.name}</Text>
+                <Text style={styles.itemLocation}>
+                  <MaterialIcons name="location-on" size={12} color="#666" />
+                  {item.location}
+                </Text>
+                <View style={styles.priceRow}>
+                  <Text style={styles.itemPrice}>
+                    {item.price.toLocaleString()} VND × {item.quantity}
+                  </Text>
+                  <Text style={styles.itemTotal}>
+                    {(item.price * item.quantity).toLocaleString()} VND
+                  </Text>
+                </View>
+              </View>
+            </View>
+          ))}
+        </View>
+
+        {/* Thông tin thanh toán */}
+        <View style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <MaterialIcons name="payment" size={20} color="#4A90E2" />
+            <Text style={styles.sectionTitle}>Thông tin thanh toán</Text>
+          </View>
+
+          <View style={styles.infoRow}>
+            <Text style={styles.infoLabel}>Phương thức:</Text>
+            <Text style={[styles.infoValue, styles.methodText]}>
+              Thanh toán toàn bộ
+            </Text>
+          </View>
+
+          <View style={[styles.infoRow, styles.totalRow]}>
+            <Text style={[styles.infoLabel, styles.totalLabel]}>
+              Tổng thanh toán:
+            </Text>
+            <Text style={[styles.infoValue, styles.totalValue]}>
+              {paymentInfo.totalPrice.toLocaleString()} VND
+            </Text>
           </View>
         </View>
 
         {/* Phương thức thanh toán */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Phương thức thanh toán</Text>
-
-          <TouchableOpacity style={styles.paymentMethod}>
+          <View style={styles.sectionHeader}>
+            <MaterialIcons name="credit-card" size={20} color="#4A90E2" />
+            <Text style={styles.sectionTitle}>Phương thức thanh toán</Text>
+          </View>
+          <View style={styles.paymentMethod}>
             <Image
               source={require("@/assets/images/zalopay.png")}
-              style={styles.paymentLogo}
+              style={styles.zalopayLogo}
             />
-            <Text style={styles.paymentName}>ZaloPay</Text>
-            <MaterialIcons
-              name="radio-button-checked"
-              size={24}
-              color="#4A90E2"
-              style={styles.paymentCheck}
-            />
-          </TouchableOpacity>
-        </View>
-
-        {/* Thông báo */}
-        <View style={styles.notice}>
-          <MaterialIcons name="info-outline" size={18} color="#666" />
-          <Text style={styles.noticeText}>
-            Thông tin xác nhận sẽ được gửi đến email của bạn sau khi thanh toán
-            thành công
-          </Text>
+            <Text style={styles.paymentMethodText}>ZaloPay</Text>
+          </View>
         </View>
       </ScrollView>
 
       {/* Nút thanh toán */}
-      <TouchableOpacity
-        style={[styles.payButton, isProcessing && styles.disabledButton]}
-        onPress={handleZaloPayPayment}
-        disabled={isProcessing}
+      <View style={styles.paymentFooter}>
+        <TouchableOpacity
+          style={[styles.payButton, isProcessing && styles.disabledButton]}
+          onPress={handlePayment}
+          disabled={isProcessing}
+        >
+          {isProcessing ? (
+            <ActivityIndicator color="#FFF" />
+          ) : (
+            <>
+              <Text style={styles.payButtonText}>THANH TOÁN ZALOPAY</Text>
+              <Text style={styles.payButtonAmount}>
+                {paymentInfo.paymentAmount.toLocaleString()} VND
+              </Text>
+            </>
+          )}
+        </TouchableOpacity>
+      </View>
+
+      {/* Modal thông báo thành công */}
+      <Modal
+        visible={showSuccessModal}
+        animationType="fade"
+        transparent={true}
+        onRequestClose={() => {
+          setShowSuccessModal(false);
+          router.replace("/(tabs)/home");
+        }}
       >
-        {isProcessing ? (
-          <Text style={styles.payButtonText}>Đang xử lý...</Text>
-        ) : (
-          <>
-            <Text style={styles.payButtonText}>THANH TOÁN VỚI ZALOPAY</Text>
-            <Text style={styles.payButtonAmount}>
-              {totalAmount.toLocaleString()} VND
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContainer}>
+            <FontAwesome name="check-circle" size={60} color="#4CAF50" />
+            <Text style={styles.modalTitle}>Thanh toán thành công!</Text>
+            <Text style={styles.modalText}>
+              Bạn đã thanh toán thành công{" "}
+              {paymentInfo.paymentAmount.toLocaleString()} VND qua ZaloPay.
+              Thông tin xác nhận đã được gửi đến email{" "}
+              {paymentInfo.customerInfo.email}.
             </Text>
-          </>
-        )}
-      </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -249,9 +252,14 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
     padding: 16,
+    backgroundColor: "#FFF",
     borderBottomWidth: 1,
     borderBottomColor: "#EEE",
-    backgroundColor: "#FFF",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
   headerTitle: {
     fontSize: 18,
@@ -264,70 +272,99 @@ const styles = StyleSheet.create({
   },
   section: {
     backgroundColor: "#FFF",
-    borderRadius: 8,
+    borderRadius: 12,
     padding: 16,
     marginBottom: 16,
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 6,
     elevation: 2,
+  },
+  sectionHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 16,
   },
   sectionTitle: {
     fontSize: 16,
     fontWeight: "bold",
     color: "#333",
-    marginBottom: 12,
-    paddingBottom: 8,
-    borderBottomWidth: 1,
-    borderBottomColor: "#EEE",
+    marginLeft: 8,
   },
-  orderItem: {
-    marginBottom: 12,
-  },
-  itemName: {
-    fontSize: 14,
-    color: "#333",
-    marginBottom: 4,
-  },
-  itemPrice: {
-    fontSize: 13,
-    color: "#666",
-  },
-  totalContainer: {
+  infoRow: {
     flexDirection: "row",
     justifyContent: "space-between",
+    marginBottom: 12,
+  },
+  infoLabel: {
+    fontSize: 14,
+    color: "#666",
+  },
+  infoValue: {
+    fontSize: 14,
+    color: "#333",
+    fontWeight: "500",
+  },
+  methodText: {
+    color: "#4A90E2",
+    fontWeight: "600",
+  },
+  totalRow: {
     marginTop: 12,
     paddingTop: 12,
     borderTopWidth: 1,
     borderTopColor: "#EEE",
   },
   totalLabel: {
+    fontWeight: "bold",
     fontSize: 15,
-    fontWeight: "bold",
-    color: "#333",
   },
-  totalAmount: {
-    fontSize: 16,
+  totalValue: {
     fontWeight: "bold",
+    fontSize: 16,
     color: "#FF6B00",
   },
-  inputGroup: {
+  orderItem: {
+    flexDirection: "row",
     marginBottom: 16,
+    paddingBottom: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: "#EEE",
   },
-  inputLabel: {
-    fontSize: 14,
+  itemImage: {
+    width: 80,
+    height: 80,
+    borderRadius: 8,
+    marginRight: 12,
+  },
+  itemDetails: {
+    flex: 1,
+  },
+  itemName: {
+    fontSize: 15,
+    fontWeight: "600",
     color: "#333",
+    marginBottom: 4,
+  },
+  itemLocation: {
+    fontSize: 12,
+    color: "#666",
     marginBottom: 8,
   },
-  input: {
-    backgroundColor: "#F5F5F5",
-    borderRadius: 8,
-    padding: 12,
+  priceRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  itemPrice: {
+    fontSize: 13,
+    color: "#666",
+  },
+  itemTotal: {
     fontSize: 14,
-    color: "#333",
-    borderWidth: 1,
-    borderColor: "#DDD",
+    fontWeight: "bold",
+    color: "#FF6B00",
   },
   paymentMethod: {
     flexDirection: "row",
@@ -336,33 +373,30 @@ const styles = StyleSheet.create({
     backgroundColor: "#F5F5F5",
     borderRadius: 8,
   },
-  paymentLogo: {
+  zalopayLogo: {
     width: 40,
     height: 40,
     marginRight: 12,
   },
-  paymentName: {
-    fontSize: 15,
-    color: "#333",
+  paymentMethodText: {
+    fontSize: 16,
     fontWeight: "500",
-    flex: 1,
+    color: "#333",
   },
-  paymentCheck: {
-    marginLeft: "auto",
-  },
-  notice: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#FFF8E1",
-    padding: 12,
-    borderRadius: 8,
-    marginBottom: 16,
-  },
-  noticeText: {
-    fontSize: 13,
-    color: "#666",
-    marginLeft: 8,
-    flex: 1,
+  paymentFooter: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+    padding: 16,
+    backgroundColor: "#FFF",
+    borderTopWidth: 1,
+    borderTopColor: "#EEE",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: -2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 5,
   },
   payButton: {
     backgroundColor: "#4A90E2",
@@ -371,7 +405,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingHorizontal: 24,
     paddingVertical: 16,
-    margin: 16,
     borderRadius: 8,
   },
   disabledButton: {
@@ -386,5 +419,34 @@ const styles = StyleSheet.create({
     color: "#FFF",
     fontWeight: "bold",
     fontSize: 16,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.5)",
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 20,
+  },
+  modalContainer: {
+    backgroundColor: "#FFF",
+    borderRadius: 16,
+    padding: 24,
+    width: "90%",
+    maxWidth: 400,
+    alignItems: "center",
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: "bold",
+    color: "#333",
+    textAlign: "center",
+    marginVertical: 12,
+  },
+  modalText: {
+    fontSize: 15,
+    color: "#666",
+    textAlign: "center",
+    marginBottom: 20,
+    lineHeight: 22,
   },
 });

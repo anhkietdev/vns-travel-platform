@@ -6,9 +6,13 @@ import {
   Alert,
   FlatList,
   Image,
+  KeyboardAvoidingView,
+  Modal,
+  Platform,
   ScrollView,
   StyleSheet,
   Text,
+  TextInput,
   TouchableOpacity,
   View,
 } from "react-native";
@@ -22,14 +26,24 @@ type CartItem = {
   quantity: number;
 };
 
+type PaymentMethod = "full" | "deposit";
+
 export default function CartScreen() {
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [totalPrice, setTotalPrice] = useState(0);
+  const [showPaymentOptions, setShowPaymentOptions] = useState(false);
+  const [showCustomerForm, setShowCustomerForm] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("full");
+  const [customerInfo, setCustomerInfo] = useState({
+    fullName: "",
+    email: "",
+    phone: "",
+    address: "",
+    note: "",
+  });
 
   // Load giỏ hàng từ storage khi mở trang
   useEffect(() => {
-    // Trong thực tế, bạn sẽ lấy dữ liệu từ AsyncStorage hoặc state management
-    // Đây là dữ liệu mẫu
     const sampleCartItems: CartItem[] = [
       {
         id: 1,
@@ -100,7 +114,7 @@ export default function CartScreen() {
     );
   };
 
-  // Thanh toán
+  // Xử lý thanh toán
   const handleCheckout = () => {
     if (cartItems.length === 0) {
       Alert.alert(
@@ -110,13 +124,44 @@ export default function CartScreen() {
       return;
     }
 
+    setShowPaymentOptions(true);
+  };
+
+  // Xác nhận phương thức thanh toán
+  const confirmPaymentMethod = () => {
+    setShowPaymentOptions(false);
+    setShowCustomerForm(true);
+  };
+
+  // Gửi thông tin thanh toán
+  const submitPayment = () => {
+    // Validate form
+    if (!customerInfo.fullName || !customerInfo.phone || !customerInfo.email) {
+      Alert.alert("Lỗi", "Vui lòng điền đầy đủ thông tin bắt buộc");
+      return;
+    }
+
+    const paymentAmount =
+      paymentMethod === "full" ? totalPrice : Math.round(totalPrice * 0.3); // Đặt cọc 30%
+
+    const paymentInfo = {
+      ...customerInfo,
+      paymentMethod,
+      paymentAmount,
+      items: cartItems,
+      totalPrice,
+      depositAmount:
+        paymentMethod === "deposit" ? Math.round(totalPrice * 0.3) : 0,
+    };
+
     router.push({
       pathname: "/payment",
       params: {
-        items: JSON.stringify(cartItems),
-        total: totalPrice.toString(),
+        paymentData: JSON.stringify(paymentInfo),
       },
     });
+
+    setShowCustomerForm(false);
   };
 
   // Render mỗi item trong giỏ hàng
@@ -189,37 +234,45 @@ export default function CartScreen() {
           </TouchableOpacity>
         </View>
       ) : (
-        <ScrollView style={styles.content}>
-          <FlatList
-            data={cartItems}
-            renderItem={renderCartItem}
-            keyExtractor={(item) => item.id.toString()}
-            scrollEnabled={false}
-            contentContainerStyle={styles.listContent}
-          />
+        <KeyboardAvoidingView
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+          style={{ flex: 1 }}
+        >
+          <ScrollView
+            style={styles.content}
+            contentContainerStyle={{ paddingBottom: 100 }}
+          >
+            <FlatList
+              data={cartItems}
+              renderItem={renderCartItem}
+              keyExtractor={(item) => item.id.toString()}
+              scrollEnabled={false}
+              contentContainerStyle={styles.listContent}
+            />
 
-          {/* Tổng thanh toán */}
-          <View style={styles.summary}>
-            <View style={styles.summaryRow}>
-              <Text style={styles.summaryLabel}>Tạm tính:</Text>
-              <Text style={styles.summaryValue}>
-                {totalPrice.toLocaleString()} VND
-              </Text>
+            {/* Tổng thanh toán */}
+            <View style={styles.summary}>
+              <View style={styles.summaryRow}>
+                <Text style={styles.summaryLabel}>Tạm tính:</Text>
+                <Text style={styles.summaryValue}>
+                  {totalPrice.toLocaleString()} VND
+                </Text>
+              </View>
+              <View style={styles.summaryRow}>
+                <Text style={styles.summaryLabel}>Giảm giá:</Text>
+                <Text style={styles.summaryValue}>0 VND</Text>
+              </View>
+              <View style={[styles.summaryRow, styles.totalRow]}>
+                <Text style={[styles.summaryLabel, styles.totalLabel]}>
+                  Tổng cộng:
+                </Text>
+                <Text style={[styles.summaryValue, styles.totalValue]}>
+                  {totalPrice.toLocaleString()} VND
+                </Text>
+              </View>
             </View>
-            <View style={styles.summaryRow}>
-              <Text style={styles.summaryLabel}>Giảm giá:</Text>
-              <Text style={styles.summaryValue}>0 VND</Text>
-            </View>
-            <View style={[styles.summaryRow, styles.totalRow]}>
-              <Text style={[styles.summaryLabel, styles.totalLabel]}>
-                Tổng cộng:
-              </Text>
-              <Text style={[styles.summaryValue, styles.totalValue]}>
-                {totalPrice.toLocaleString()} VND
-              </Text>
-            </View>
-          </View>
-        </ScrollView>
+          </ScrollView>
+        </KeyboardAvoidingView>
       )}
 
       {/* Nút thanh toán */}
@@ -234,6 +287,197 @@ export default function CartScreen() {
           </Text>
         </TouchableOpacity>
       )}
+
+      {/* Modal chọn phương thức thanh toán */}
+      <Modal
+        visible={showPaymentOptions}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={() => setShowPaymentOptions(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContainer}>
+            <Text style={styles.modalTitle}>Chọn phương thức thanh toán</Text>
+
+            <TouchableOpacity
+              style={[
+                styles.paymentOption,
+                paymentMethod === "full" && styles.paymentOptionSelected,
+              ]}
+              onPress={() => setPaymentMethod("full")}
+            >
+              <MaterialIcons
+                name={
+                  paymentMethod === "full"
+                    ? "radio-button-checked"
+                    : "radio-button-unchecked"
+                }
+                size={24}
+                color="#4A90E2"
+              />
+              <View style={styles.paymentOptionTextContainer}>
+                <Text style={styles.paymentOptionTitle}>
+                  Thanh toán toàn bộ
+                </Text>
+                <Text style={styles.paymentOptionDescription}>
+                  Thanh toán 100% tổng giá trị đơn hàng
+                </Text>
+                <Text style={styles.paymentOptionAmount}>
+                  {totalPrice.toLocaleString()} VND
+                </Text>
+              </View>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[
+                styles.paymentOption,
+                paymentMethod === "deposit" && styles.paymentOptionSelected,
+              ]}
+              onPress={() => setPaymentMethod("deposit")}
+            >
+              <MaterialIcons
+                name={
+                  paymentMethod === "deposit"
+                    ? "radio-button-checked"
+                    : "radio-button-unchecked"
+                }
+                size={24}
+                color="#4A90E2"
+              />
+              <View style={styles.paymentOptionTextContainer}>
+                <Text style={styles.paymentOptionTitle}>Đặt cọc</Text>
+                <Text style={styles.paymentOptionDescription}>
+                  Đặt cọc 30% giá trị tour, thanh toán phần còn lại trước ngày
+                  khởi hành
+                </Text>
+                <Text style={styles.paymentOptionAmount}>
+                  {Math.round(totalPrice * 0.3).toLocaleString()} VND
+                </Text>
+              </View>
+            </TouchableOpacity>
+
+            <View style={styles.modalButtonContainer}>
+              <TouchableOpacity
+                style={[styles.modalButton, styles.cancelButton]}
+                onPress={() => setShowPaymentOptions(false)}
+              >
+                <Text style={styles.cancelButtonText}>Hủy</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.modalButton, styles.confirmButton]}
+                onPress={confirmPaymentMethod}
+              >
+                <Text style={styles.confirmButtonText}>Xác nhận</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Modal form thông tin khách hàng */}
+      <Modal
+        visible={showCustomerForm}
+        animationType="slide"
+        transparent={false}
+        onRequestClose={() => setShowCustomerForm(false)}
+      >
+        <View style={styles.formContainer}>
+          <View style={styles.formHeader}>
+            <TouchableOpacity onPress={() => setShowCustomerForm(false)}>
+              <MaterialIcons name="arrow-back" size={24} color="#4A90E2" />
+            </TouchableOpacity>
+            <Text style={styles.formTitle}>Thông tin khách hàng</Text>
+            <View style={{ width: 24 }} />
+          </View>
+
+          <ScrollView style={styles.formContent}>
+            <Text style={styles.formSectionTitle}>Thông tin thanh toán</Text>
+            <Text style={styles.formLabel}>Họ và tên*</Text>
+            <TextInput
+              style={styles.formInput}
+              placeholder="Nhập họ và tên"
+              value={customerInfo.fullName}
+              onChangeText={(text) =>
+                setCustomerInfo({ ...customerInfo, fullName: text })
+              }
+            />
+
+            <Text style={styles.formLabel}>Email*</Text>
+            <TextInput
+              style={styles.formInput}
+              placeholder="Nhập email"
+              keyboardType="email-address"
+              value={customerInfo.email}
+              onChangeText={(text) =>
+                setCustomerInfo({ ...customerInfo, email: text })
+              }
+            />
+
+            <Text style={styles.formLabel}>Số điện thoại*</Text>
+            <TextInput
+              style={styles.formInput}
+              placeholder="Nhập số điện thoại"
+              keyboardType="phone-pad"
+              value={customerInfo.phone}
+              onChangeText={(text) =>
+                setCustomerInfo({ ...customerInfo, phone: text })
+              }
+            />
+
+            <Text style={styles.formLabel}>Địa chỉ</Text>
+            <TextInput
+              style={styles.formInput}
+              placeholder="Nhập địa chỉ"
+              value={customerInfo.address}
+              onChangeText={(text) =>
+                setCustomerInfo({ ...customerInfo, address: text })
+              }
+            />
+
+            <Text style={styles.formLabel}>Ghi chú</Text>
+            <TextInput
+              style={[styles.formInput, { height: 80 }]}
+              placeholder="Ghi chú thêm (nếu có)"
+              multiline
+              value={customerInfo.note}
+              onChangeText={(text) =>
+                setCustomerInfo({ ...customerInfo, note: text })
+              }
+            />
+
+            <View style={styles.paymentSummary}>
+              <Text style={styles.paymentSummaryTitle}>Tóm tắt thanh toán</Text>
+              <View style={styles.paymentSummaryRow}>
+                <Text style={styles.paymentSummaryLabel}>Phương thức:</Text>
+                <Text style={styles.paymentSummaryValue}>
+                  {paymentMethod === "full"
+                    ? "Thanh toán toàn bộ"
+                    : "Đặt cọc 30%"}
+                </Text>
+              </View>
+              <View style={styles.paymentSummaryRow}>
+                <Text style={styles.paymentSummaryLabel}>Số tiền:</Text>
+                <Text style={styles.paymentSummaryValue}>
+                  {paymentMethod === "full"
+                    ? totalPrice.toLocaleString()
+                    : Math.round(totalPrice * 0.3).toLocaleString()}{" "}
+                  VND
+                </Text>
+              </View>
+            </View>
+          </ScrollView>
+
+          <TouchableOpacity style={styles.submitButton} onPress={submitPayment}>
+            <Text style={styles.submitButtonText}>
+              {paymentMethod === "full" ? "THANH TOÁN" : "ĐẶT CỌC"}{" "}
+              {paymentMethod === "full"
+                ? totalPrice.toLocaleString()
+                : Math.round(totalPrice * 0.3).toLocaleString()}{" "}
+              VND
+            </Text>
+          </TouchableOpacity>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -405,6 +649,10 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     margin: 16,
     borderRadius: 8,
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
   },
   checkoutButtonText: {
     color: "#FFF",
@@ -412,6 +660,169 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   checkoutButtonPrice: {
+    color: "#FFF",
+    fontWeight: "bold",
+    fontSize: 16,
+  },
+  // Modal styles
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.5)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  modalContainer: {
+    backgroundColor: "#FFF",
+    borderRadius: 12,
+    padding: 20,
+    width: "90%",
+    maxWidth: 400,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    marginBottom: 20,
+    textAlign: "center",
+    color: "#333",
+  },
+  paymentOption: {
+    flexDirection: "row",
+    alignItems: "center",
+    padding: 15,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "#EEE",
+    marginBottom: 10,
+  },
+  paymentOptionSelected: {
+    borderColor: "#4A90E2",
+    backgroundColor: "#F0F7FF",
+  },
+  paymentOptionTextContainer: {
+    marginLeft: 10,
+    flex: 1,
+  },
+  paymentOptionTitle: {
+    fontSize: 16,
+    fontWeight: "bold",
+    color: "#333",
+  },
+  paymentOptionDescription: {
+    fontSize: 13,
+    color: "#666",
+    marginTop: 4,
+  },
+  paymentOptionAmount: {
+    fontSize: 15,
+    fontWeight: "bold",
+    color: "#FF6B00",
+    marginTop: 6,
+  },
+  modalButtonContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginTop: 20,
+  },
+  modalButton: {
+    flex: 1,
+    padding: 12,
+    borderRadius: 8,
+    alignItems: "center",
+  },
+  cancelButton: {
+    backgroundColor: "#EEE",
+    marginRight: 10,
+  },
+  confirmButton: {
+    backgroundColor: "#4A90E2",
+    marginLeft: 10,
+  },
+  cancelButtonText: {
+    color: "#666",
+    fontWeight: "bold",
+  },
+  confirmButtonText: {
+    color: "#FFF",
+    fontWeight: "bold",
+  },
+  // Form styles
+  formContainer: {
+    flex: 1,
+    backgroundColor: "#F8F9FA",
+  },
+  formHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    padding: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: "#EEE",
+    backgroundColor: "#FFF",
+  },
+  formTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "#333",
+  },
+  formContent: {
+    flex: 1,
+    padding: 16,
+  },
+  formSectionTitle: {
+    fontSize: 16,
+    fontWeight: "bold",
+    color: "#333",
+    marginBottom: 16,
+  },
+  formLabel: {
+    fontSize: 14,
+    color: "#666",
+    marginBottom: 8,
+    marginTop: 12,
+  },
+  formInput: {
+    backgroundColor: "#FFF",
+    borderWidth: 1,
+    borderColor: "#DDD",
+    borderRadius: 8,
+    padding: 12,
+    fontSize: 15,
+  },
+  paymentSummary: {
+    backgroundColor: "#FFF",
+    borderRadius: 8,
+    padding: 16,
+    marginTop: 20,
+    borderWidth: 1,
+    borderColor: "#EEE",
+  },
+  paymentSummaryTitle: {
+    fontSize: 16,
+    fontWeight: "bold",
+    color: "#333",
+    marginBottom: 12,
+  },
+  paymentSummaryRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 8,
+  },
+  paymentSummaryLabel: {
+    fontSize: 14,
+    color: "#666",
+  },
+  paymentSummaryValue: {
+    fontSize: 14,
+    fontWeight: "500",
+    color: "#333",
+  },
+  submitButton: {
+    backgroundColor: "#4A90E2",
+    padding: 16,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  submitButtonText: {
     color: "#FFF",
     fontWeight: "bold",
     fontSize: 16,

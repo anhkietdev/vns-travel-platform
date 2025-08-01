@@ -1,4 +1,4 @@
-// app/(tabs)/signin.tsx
+// app/(tabs)/register.tsx
 import { MaterialIcons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { useState } from "react";
@@ -12,32 +12,32 @@ import {
   View,
 } from "react-native";
 
-export default function SignInScreen() {
-  const [email, setEmail] = useState("");
+export default function RegisterScreen() {
   const [password, setPassword] = useState("");
-  const [emailError, setEmailError] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [passwordError, setPasswordError] = useState("");
+  const [confirmError, setConfirmError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
-  const handlePasswordChange = (text: string) => {
+  const handlePasswordChange = (
+    text: string,
+    field: "password" | "confirm"
+  ) => {
     const numericText = text.replace(/[^0-9]/g, "");
     const limitedText = numericText.slice(0, 6);
-    setPassword(limitedText);
-    setPasswordError("");
+
+    if (field === "password") {
+      setPassword(limitedText);
+      setPasswordError("");
+    } else {
+      setConfirmPassword(limitedText);
+      setConfirmError("");
+    }
   };
 
-  const handleLogin = () => {
+  const handleRegister = () => {
     let isValid = true;
-
-    if (!email) {
-      setEmailError("Vui lòng nhập email");
-      isValid = false;
-    } else if (!/^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/.test(email)) {
-      setEmailError("Email không hợp lệ");
-      isValid = false;
-    } else {
-      setEmailError("");
-    }
 
     if (!password) {
       setPasswordError("Vui lòng nhập mật khẩu");
@@ -45,15 +45,21 @@ export default function SignInScreen() {
     } else if (password.length < 6) {
       setPasswordError("Mật khẩu phải đủ 6 số");
       isValid = false;
-    } else {
-      setPasswordError("");
+    }
+
+    if (!confirmPassword) {
+      setConfirmError("Vui lòng xác nhận mật khẩu");
+      isValid = false;
+    } else if (password !== confirmPassword) {
+      setConfirmError("Mật khẩu không khớp");
+      isValid = false;
     }
 
     if (isValid) {
-      Alert.alert("Thành công", "Đăng nhập thành công!", [
+      Alert.alert("Thành công", "Tạo tài khoản thành công!", [
         {
           text: "OK",
-          onPress: () => router.replace("/(tabs)/home"),
+          onPress: () => router.replace("/signin"),
         },
       ]);
     }
@@ -66,19 +72,31 @@ export default function SignInScreen() {
         style={styles.logo}
         resizeMode="contain"
       />
-      <Text style={styles.title}>Đăng nhập</Text>
+      <Text style={styles.title}>Tạo tài khoản</Text>
+
+      <Text style={styles.label}>Họ và tên</Text>
+      <TextInput
+        style={styles.input}
+        placeholder="Nhập họ tên"
+        placeholderTextColor="#999"
+      />
 
       <Text style={styles.label}>Email</Text>
       <TextInput
-        style={[styles.input, emailError ? styles.errorInput : null]}
+        style={styles.input}
         placeholder="Nhập email"
         placeholderTextColor="#999"
-        value={email}
-        onChangeText={setEmail}
         keyboardType="email-address"
         autoCapitalize="none"
       />
-      {emailError && <Text style={styles.errorText}>{emailError}</Text>}
+
+      <Text style={styles.label}>SĐT</Text>
+      <TextInput
+        style={styles.input}
+        placeholder="Nhập số điện thoại"
+        placeholderTextColor="#999"
+        keyboardType="phone-pad"
+      />
 
       <Text style={styles.label}>Mật khẩu</Text>
       <View style={styles.passwordContainer}>
@@ -89,11 +107,11 @@ export default function SignInScreen() {
           ]}
           placeholder="••••••"
           placeholderTextColor="#999"
-          secureTextEntry={!showPassword}
           value={password}
-          onChangeText={handlePasswordChange}
+          onChangeText={(text) => handlePasswordChange(text, "password")}
           keyboardType="numeric"
           maxLength={6}
+          secureTextEntry={!showPassword}
         />
         <TouchableOpacity
           style={styles.eyeIcon}
@@ -108,21 +126,42 @@ export default function SignInScreen() {
       </View>
       {passwordError && <Text style={styles.errorText}>{passwordError}</Text>}
 
-      <TouchableOpacity
-        style={styles.forgotButton}
-        onPress={() => router.push("/forgot-password")}
-      >
-        <Text style={styles.forgotText}>Quên mật khẩu?</Text>
+      <Text style={styles.label}>Xác nhận mật khẩu</Text>
+      <View style={styles.passwordContainer}>
+        <TextInput
+          style={[
+            styles.passwordInput,
+            confirmError ? styles.errorInput : null,
+          ]}
+          placeholder="••••••"
+          placeholderTextColor="#999"
+          value={confirmPassword}
+          onChangeText={(text) => handlePasswordChange(text, "confirm")}
+          keyboardType="numeric"
+          maxLength={6}
+          secureTextEntry={!showConfirmPassword}
+        />
+        <TouchableOpacity
+          style={styles.eyeIcon}
+          onPress={() => setShowConfirmPassword(!showConfirmPassword)}
+        >
+          <MaterialIcons
+            name={showConfirmPassword ? "visibility-off" : "visibility"}
+            size={24}
+            color="#666"
+          />
+        </TouchableOpacity>
+      </View>
+      {confirmError && <Text style={styles.errorText}>{confirmError}</Text>}
+
+      <TouchableOpacity style={styles.button} onPress={handleRegister}>
+        <Text style={styles.buttonText}>Tạo Tài Khoản</Text>
       </TouchableOpacity>
 
-      <TouchableOpacity style={styles.button} onPress={handleLogin}>
-        <Text style={styles.buttonText}>Đăng nhập</Text>
-      </TouchableOpacity>
-
-      <View style={styles.signupContainer}>
-        <Text style={styles.bottomText}>Chưa có tài khoản? </Text>
-        <TouchableOpacity onPress={() => router.push("/register")}>
-          <Text style={styles.signupText}>Đăng ký</Text>
+      <View style={styles.loginContainer}>
+        <Text style={styles.bottomText}>Đã có tài khoản? </Text>
+        <TouchableOpacity onPress={() => router.push("/signin")}>
+          <Text style={styles.loginText}>Đăng nhập</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -192,23 +231,13 @@ const styles = StyleSheet.create({
     color: "red",
     fontSize: 12,
     marginBottom: 12,
-    paddingLeft: 4,
-  },
-  forgotButton: {
-    alignSelf: "flex-end",
-    marginTop: 6,
-    marginBottom: 20,
-  },
-  forgotText: {
-    fontSize: 13,
-    color: "#4A90E2",
-    fontWeight: "500",
   },
   button: {
     backgroundColor: "#4A90E2",
     paddingVertical: 16,
     borderRadius: 10,
     alignItems: "center",
+    marginTop: 25,
     elevation: 2,
   },
   buttonText: {
@@ -216,7 +245,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: "#fff",
   },
-  signupContainer: {
+  loginContainer: {
     flexDirection: "row",
     justifyContent: "center",
     marginTop: 25,
@@ -225,7 +254,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "#666",
   },
-  signupText: {
+  loginText: {
     fontSize: 14,
     color: "#4A90E2",
     fontWeight: "bold",

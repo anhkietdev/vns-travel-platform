@@ -11,8 +11,6 @@ import {
 } from "react-native";
 
 const ProfileScreen = () => {
-  const [isFaceIdEnabled, setIsFaceIdEnabled] = React.useState(false);
-  const [isTwoFactorEnabled, setIsTwoFactorEnabled] = React.useState(false);
   const [userEmail] = React.useState("user@example.com");
 
   const handleLogout = () => {
@@ -24,19 +22,27 @@ const ProfileScreen = () => {
   };
 
   const handleEditProfile = () => {
-    router.push("/edit-profile"); // Chuyển đến trang chỉnh sửa profile
+    router.push("/edit-profile");
   };
 
-  const handleAddMoney = () => {
-    router.push("/ewallet"); // Chuyển đến trang ví điện tử
+  const handleLinkWallet = () => {
+    router.push("/link-wallet");
   };
 
-  const handleViewTourHistory = () => {
-    router.push("/history-tour"); // Chuyển đến trang lịch sử tour
+  const handleRateTours = () => {
+    router.push("/rate-tours");
   };
 
-  const handleChangePassword = () => {
-    router.push("/changepassword"); // Chuyển đến trang đổi mật khẩu
+  const handleSecuritySettings = () => {
+    router.push("/security-settings");
+  };
+
+  const handleRefundRequests = () => {
+    router.push("/refund-requests");
+  };
+
+  const handleWithdrawMoney = () => {
+    router.push("/withdraw-money");
   };
 
   return (
@@ -74,22 +80,63 @@ const ProfileScreen = () => {
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Ví của tôi</Text>
         <View style={styles.walletContainer}>
-          <Text style={styles.walletAmount}>4,590,000 VND</Text>
-          <TouchableOpacity
-            style={styles.addMoneyButton}
-            onPress={handleAddMoney}
-          >
-            <Text style={styles.addMoneyText}>Nạp thêm tiền</Text>
-            <FontAwesome name="plus" size={14} color="#FFF" />
-          </TouchableOpacity>
+          <View style={styles.walletRow}>
+            <Text style={styles.walletAmount}>4,590,000 VND</Text>
+            <TouchableOpacity
+              style={styles.withdrawButton}
+              onPress={handleWithdrawMoney}
+            >
+              <Text style={styles.withdrawText}>Rút tiền</Text>
+              <MaterialIcons
+                name="account-balance-wallet"
+                size={18}
+                color="#FFF"
+              />
+            </TouchableOpacity>
+          </View>
         </View>
       </View>
 
-      {/* Tour History */}
-      <TouchableOpacity style={styles.section} onPress={handleViewTourHistory}>
-        <Text style={styles.sectionTitle}>Tour đã đặt</Text>
+      {/* Linked Wallet */}
+      <TouchableOpacity style={styles.section} onPress={handleLinkWallet}>
         <View style={styles.row}>
-          <Text style={styles.sectionSubtitle}>Xem các tour bạn đã đặt</Text>
+          <View style={styles.iconContainer}>
+            <FontAwesome name="credit-card" size={20} color="#4A90E2" />
+          </View>
+          <View style={styles.textContainer}>
+            <Text style={styles.itemTitle}>Liên kết ví</Text>
+            <Text style={styles.itemSubtitle}>
+              Kết nối với ví điện tử của bạn
+            </Text>
+          </View>
+          <MaterialIcons name="chevron-right" size={24} color="#999" />
+        </View>
+      </TouchableOpacity>
+
+      {/* Rate Tours */}
+      <TouchableOpacity style={styles.section} onPress={handleRateTours}>
+        <View style={styles.row}>
+          <View style={styles.iconContainer}>
+            <FontAwesome name="star" size={20} color="#FFC107" />
+          </View>
+          <View style={styles.textContainer}>
+            <Text style={styles.itemTitle}>Đánh giá tour</Text>
+            <Text style={styles.itemSubtitle}>Chia sẻ trải nghiệm của bạn</Text>
+          </View>
+          <MaterialIcons name="chevron-right" size={24} color="#999" />
+        </View>
+      </TouchableOpacity>
+
+      {/* Refund Requests */}
+      <TouchableOpacity style={styles.section} onPress={handleRefundRequests}>
+        <View style={styles.row}>
+          <View style={styles.iconContainer}>
+            <FontAwesome name="money" size={20} color="#4CAF50" />
+          </View>
+          <View style={styles.textContainer}>
+            <Text style={styles.itemTitle}>Đơn hoàn tiền</Text>
+            <Text style={styles.itemSubtitle}>Theo dõi yêu cầu hoàn tiền</Text>
+          </View>
           <MaterialIcons name="chevron-right" size={24} color="#999" />
         </View>
       </TouchableOpacity>
@@ -98,14 +145,19 @@ const ProfileScreen = () => {
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Bảo mật</Text>
 
-        {/* Change Password */}
+        {/* Security Settings */}
         <TouchableOpacity
           style={styles.securityItem}
-          onPress={handleChangePassword}
+          onPress={handleSecuritySettings}
         >
           <View style={styles.row}>
-            <Feather name="lock" size={20} color="#333" />
-            <Text style={styles.securityText}>Đổi mật khẩu</Text>
+            <View style={styles.iconContainer}>
+              <Feather name="lock" size={20} color="#333" />
+            </View>
+            <View style={styles.textContainer}>
+              <Text style={styles.itemTitle}>Cài đặt bảo mật</Text>
+              <Text style={styles.itemSubtitle}>Bảo vệ tài khoản của bạn</Text>
+            </View>
           </View>
           <MaterialIcons name="chevron-right" size={24} color="#999" />
         </TouchableOpacity>
@@ -118,21 +170,6 @@ const ProfileScreen = () => {
       >
         <Text style={styles.logoutText}>Đăng xuất</Text>
       </TouchableOpacity>
-
-      {/* More Section */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Hỗ Trợ Và Chăm Sóc</Text>
-
-        <TouchableOpacity style={styles.moreItem}>
-          <Text style={styles.moreText}>Trợ giúp & Hỗ trợ</Text>
-          <MaterialIcons name="chevron-right" size={24} color="#999" />
-        </TouchableOpacity>
-
-        {/* <TouchableOpacity style={styles.moreItem}>
-          <Text style={styles.moreText}>Về ứng dụng</Text>
-          <MaterialIcons name="chevron-right" size={24} color="#999" />
-        </TouchableOpacity> */}
-      </View>
     </ScrollView>
   );
 };
@@ -161,10 +198,10 @@ const styles = StyleSheet.create({
     padding: 16,
     marginBottom: 16,
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
-    shadowRadius: 3,
-    elevation: 2,
+    shadowRadius: 6,
+    elevation: 3,
   },
   profileContainer: {
     flexDirection: "row",
@@ -176,6 +213,8 @@ const styles = StyleSheet.create({
     height: 80,
     borderRadius: 40,
     marginRight: 16,
+    borderWidth: 2,
+    borderColor: "#4A90E2",
   },
   profileInfo: {
     flex: 1,
@@ -207,10 +246,10 @@ const styles = StyleSheet.create({
     padding: 16,
     marginBottom: 16,
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
-    shadowRadius: 3,
-    elevation: 2,
+    shadowRadius: 6,
+    elevation: 3,
   },
   sectionTitle: {
     fontSize: 18,
@@ -218,33 +257,30 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     color: "#333",
   },
-  sectionSubtitle: {
-    fontSize: 14,
-    color: "#666",
-    flex: 1,
-  },
   walletContainer: {
     padding: 16,
     backgroundColor: "#f0f8ff",
     borderRadius: 8,
+  },
+  walletRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
     alignItems: "center",
   },
   walletAmount: {
-    fontSize: 24,
+    fontSize: 20,
     fontWeight: "bold",
     color: "#0066cc",
-    marginBottom: 12,
   },
-  addMoneyButton: {
+  withdrawButton: {
     flexDirection: "row",
-    backgroundColor: "#4A90E2",
+    backgroundColor: "#4CAF50",
     borderRadius: 20,
     paddingVertical: 8,
     paddingHorizontal: 16,
     alignItems: "center",
-    justifyContent: "center",
   },
-  addMoneyText: {
+  withdrawText: {
     color: "#FFF",
     fontSize: 14,
     fontWeight: "600",
@@ -254,37 +290,44 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
   },
+  iconContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: "#f0f0f0",
+    justifyContent: "center",
+    alignItems: "center",
+    marginRight: 16,
+  },
+  textContainer: {
+    flex: 1,
+  },
+  itemTitle: {
+    fontSize: 16,
+    fontWeight: "500",
+    color: "#333",
+    marginBottom: 2,
+  },
+  itemSubtitle: {
+    fontSize: 13,
+    color: "#999",
+  },
   securityItem: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
     paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: "#eee",
-  },
-  securityText: {
-    fontSize: 16,
-    marginLeft: 12,
-    color: "#333",
   },
   logoutSection: {
     backgroundColor: "#fff0f0",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 20,
   },
   logoutText: {
     color: "#ff4444",
     fontSize: 16,
     fontWeight: "600",
-    textAlign: "center",
-  },
-  moreItem: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingVertical: 12,
-  },
-  moreText: {
-    fontSize: 16,
-    color: "#333",
   },
 });
 
