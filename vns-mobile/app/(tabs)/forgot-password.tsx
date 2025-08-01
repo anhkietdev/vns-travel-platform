@@ -1,18 +1,18 @@
 // app/(tabs)/forgot-password.tsx
+import { MaterialIcons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { useState } from "react";
 import {
   Alert,
+  Image,
+  KeyboardAvoidingView,
+  Platform,
   StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
   View,
-  Image,
-  KeyboardAvoidingView,
-  Platform,
 } from "react-native";
-import { MaterialIcons } from "@expo/vector-icons";
 
 export default function ForgotPasswordScreen() {
   const [email, setEmail] = useState("");
