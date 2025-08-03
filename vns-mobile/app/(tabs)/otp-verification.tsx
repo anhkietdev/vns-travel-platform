@@ -1,16 +1,15 @@
-// app/(tabs)/otp-verification.tsx
 import { router } from "expo-router";
-import { useState, useRef, useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
+  Alert,
   StyleSheet,
   Text,
-  View,
   TextInput,
   TouchableOpacity,
-  Alert,
+  View,
 } from "react-native";
 
-export default function OTPVerificationScreen() {
+const OTPVerificationScreen = () => {
   const [otp, setOtp] = useState(["", "", "", ""]);
   const [timer, setTimer] = useState(90); // 1:30 timer
   const inputsRef = useRef<Array<TextInput | null>>([]);
@@ -75,7 +74,11 @@ export default function OTPVerificationScreen() {
             onKeyPress={(e) => handleKeyPress(e, index)}
             keyboardType="number-pad"
             maxLength={1}
-            ref={(ref) => (inputsRef.current[index] = ref)}
+            ref={(ref) => {
+              if (ref && inputsRef.current) {
+                inputsRef.current[index] = ref;
+              }
+            }}
             textAlign="center"
           />
         ))}
@@ -98,7 +101,7 @@ export default function OTPVerificationScreen() {
       </View>
     </View>
   );
-}
+};
 
 const styles = StyleSheet.create({
   container: {
@@ -165,4 +168,5 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
   },
 });
+
 export default OTPVerificationScreen;
