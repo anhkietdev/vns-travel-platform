@@ -36,11 +36,11 @@
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"
       }
-    },
-
-    "environmentVariables": {
-      "GOOGLE_APPLICATION_CREDENTIALS": "C:\\Users\\truon\\Key"
     }
+
+    //"environmentVariables": {
+    //  "GOOGLE_APPLICATION_CREDENTIALS": "C:\\Users\\truon\\Key"
+    //}
 
   }
 }

@@ -2,8 +2,9 @@
 {
     public enum PaymentMethod
     {
-        CreditCard,        
-        BankTransfer,
-        Zalopay
+        CreditCard = 1,
+        BankTransfer = 2,
+        Zalopay = 3,
+        Cash = 4
     }
 }
