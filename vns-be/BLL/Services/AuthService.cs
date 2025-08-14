@@ -39,6 +39,10 @@ namespace BLL.Services
 
         public async Task<AuthResponseDTO> RegisterAsync(RegisterDTO model)
         {
+            if (string.IsNullOrWhiteSpace(model.Password))
+            {
+                throw new Exception("Password is required.");
+            }
             var existingUser = await _unitOfWork.User.GetAsync(u => u.Email == model.Email);
             if (existingUser != null)
             {
@@ -51,8 +55,8 @@ namespace BLL.Services
                 Email = model.Email,
                 FullName = $"{model.FirstName} {model.LastName}",
                 PhoneNumber = model.PhoneNumber,
-                Role = Role.Customer, // Default role
-                PasswordHash = _passwordHasher.HashPassword(null!, model.Password)
+                Role = (int)Role.Customer, // Default role
+                Password = _passwordHasher.HashPassword(null!, model.Password)
             };
 
             await _unitOfWork.User.AddAsync(user);
@@ -80,7 +84,7 @@ namespace BLL.Services
                 throw new Exception("Invalid email or password");
             }
 
-            var result = _passwordHasher.VerifyHashedPassword(user, user.PasswordHash, model.Password);
+            var result = _passwordHasher.VerifyHashedPassword(user, user.Password, model.Password);
             if (result == PasswordVerificationResult.Failed)
             {
                 throw new Exception("Invalid email or password");
@@ -181,7 +185,7 @@ namespace BLL.Services
             }
 
             // Update password
-            user.PasswordHash = _passwordHasher.HashPassword(user, model.NewPassword);
+            user.Password = _passwordHasher.HashPassword(user, model.NewPassword);
             await _unitOfWork.User.UpdateAsync(user);
             await _unitOfWork.SaveChangesAsync();
 

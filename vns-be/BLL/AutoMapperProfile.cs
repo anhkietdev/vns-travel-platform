@@ -13,17 +13,12 @@ namespace BLL
                 .ForMember(dest => dest.PartnerId, opt => opt.MapFrom(src => src.PartnerId))
                 .ForMember(dest => dest.Title, opt => opt.MapFrom(src => src.Title))
                 .ForMember(dest => dest.Description, opt => opt.MapFrom(src => src.Description))
-                .ForMember(dest => dest.Price, opt => opt.MapFrom(src => src.Price))
-                .ForMember(dest => dest.Availability, opt => opt.MapFrom(src => src.Availability))
                 .ForMember(dest => dest.ServiceType, opt => opt.MapFrom(src => src.ServiceType))
                 .ForMember(dest => dest.Location, opt => opt.MapFrom(src => src.Location))
                 .ReverseMap();
 
             CreateMap<Booking, BookingDto>()
-                .ForMember(dest => dest.ServiceId, opt => opt.MapFrom(src => src.ServiceId))
-                .ForMember(dest => dest.ComboId, opt => opt.MapFrom(src => src.ComboId))
                 .ForMember(dest => dest.BookingType, opt => opt.MapFrom(src => src.BookingType))
-                .ForMember(dest => dest.BookingDate, opt => opt.MapFrom(src => src.BookingDate))
                 .ForMember(dest => dest.BookingStatus, opt => opt.MapFrom(src => src.BookingStatus))
                 .ForMember(dest => dest.TotalAmount, opt => opt.MapFrom(src => src.TotalAmount))
                 .ForMember(dest => dest.PaymentMethod, opt => opt.MapFrom(src => src.PaymentMethod))

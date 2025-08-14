@@ -5,6 +5,8 @@ using DAL.Repositories.Implementations;
 using DAL.Repositories.Interfaces;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
@@ -61,6 +63,49 @@ builder.Services.AddCors(options =>
     });
 });
 
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = GoogleDefaults.AuthenticationScheme;
+})
+.AddCookie()
+.AddGoogle(options =>
+{
+    options.ClientId = builder.Configuration["Authentication:Google:ClientId"];
+    options.ClientSecret = builder.Configuration["Authentication:Google:ClientSecret"];
+    options.CallbackPath = "/signin-google";
+    options.Events.OnCreatingTicket = async context =>
+    {
+        var email = context.Principal.FindFirst(System.Security.Claims.ClaimTypes.Email)?.Value;
+        var name = context.Principal.FindFirst(System.Security.Claims.ClaimTypes.Name)?.Value;
+        var phoneNumber = context.Principal.FindFirst(System.Security.Claims.ClaimTypes.MobilePhone)?.Value;
+
+        // Get required services
+        var db = context.HttpContext.RequestServices.GetRequiredService<IUnitOfWork>();
+        var jwtService = context.HttpContext.RequestServices.GetRequiredService<IJwtService>();
+
+        var user = await db.User.GetAsync(u => u.Email == email);
+        if (user == null)
+        {
+            user = new User
+            {
+                UserId = Guid.NewGuid(),
+                Email = email,
+                FullName = name,
+                PhoneNumber = phoneNumber,
+                Role = (int)DAL.Models.Enum.Role.Customer
+            };
+            await db.User.AddAsync(user);
+            await db.SaveChangesAsync();
+        }
+
+        var token = jwtService.GenerateJwtToken(user);
+
+        // Store token in a cookie or redirect with token as query param
+        context.Properties.RedirectUri = $"/auth/google-callback?token={token}";
+    };
+});
+
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
@@ -97,7 +142,7 @@ builder.Services.AddSwaggerGen(c =>
 var app = builder.Build();
 
 // Initialize database
-await app.InitializeDatabaseAsync();
+//await app.InitializeDatabaseAsync();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())

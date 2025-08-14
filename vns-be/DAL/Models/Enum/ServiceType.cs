@@ -2,9 +2,8 @@
 {
     public enum ServiceType
     {
-        Hotel,
-        Restaurant,
+        Homestay,
         Tour,
-        Transport
+        VehicaleRental
     }
 }
