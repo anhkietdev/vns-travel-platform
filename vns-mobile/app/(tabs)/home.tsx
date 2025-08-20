@@ -845,7 +845,7 @@ export default function HomeScreen() {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        {/* Dịch vụ Du Lịch - Phiên bản đẹp hơn */}
+        {/* Dịch vụ Du Lịch */}
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionTitle}>Dịch Vụ Du Lịch</Text>
         </View>
@@ -856,7 +856,7 @@ export default function HomeScreen() {
               styles.serviceButton,
               activeCategory === "Tour" && styles.activeServiceButton,
             ]}
-            onPress={() => setActiveCategory("Tour")}
+            onPress={() => router.push("/(tabs)/tours")}
           >
             <View style={styles.serviceIconContainer}>
               <MaterialIcons
@@ -880,7 +880,7 @@ export default function HomeScreen() {
               styles.serviceButton,
               activeCategory === "HomeStay" && styles.activeServiceButton,
             ]}
-            onPress={() => setActiveCategory("HomeStay")}
+            onPress={() => router.push("/(tabs)/homestay")}
           >
             <View style={styles.serviceIconContainer}>
               <MaterialIcons
@@ -904,7 +904,7 @@ export default function HomeScreen() {
               styles.serviceButton,
               activeCategory === "Thuê Xe" && styles.activeServiceButton,
             ]}
-            onPress={() => setActiveCategory("Thuê Xe")}
+            onPress={() => router.push("/(tabs)/rental")}
           >
             <View style={styles.serviceIconContainer}>
               <MaterialIcons
@@ -927,9 +927,6 @@ export default function HomeScreen() {
         {/* Popular Trips */}
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionTitle}>Địa Điểm Nổi Bật</Text>
-          <TouchableOpacity>
-            <Text style={styles.seeAll}>Xem tất cả</Text>
-          </TouchableOpacity>
         </View>
 
         <FlatList
@@ -944,9 +941,6 @@ export default function HomeScreen() {
         {/* Group Trips */}
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionTitle}>Tour Du Lịch Nhóm</Text>
-          <TouchableOpacity>
-            <Text style={styles.seeAll}>Xem tất cả</Text>
-          </TouchableOpacity>
         </View>
 
         <FlatList
